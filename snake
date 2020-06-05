@@ -1,0 +1,301 @@
+#include "display.h"
+int status[15];
+int readLine(char** str, FILE* stream)
+{
+	int c = 0;
+	int i = 0;
+	int size = 50;
+
+	*str = malloc(size);
+
+	if (!(*str))
+		return -1;
+
+	while ((c = getc(stream)) != EOF && c != 26)
+	{
+		if (i >= size - 1)
+		{
+			char* l = realloc(*str, size + 50);
+
+			size += 50;
+
+			if (!l)
+				return -1;
+			*str = l;
+		}
+
+		if (c == '\n')
+		{
+			(*str)[i] = 0;
+			return 0;
+		}
+
+		(*str)[i] = (char)c;
+		i++;
+	}
+
+	(*str)[i] = 0;
+
+	if (i)
+		return 2;
+
+	return 1;
+}
+int window_processing(char* str, int* posotion_window_x, int* posotion_window_y)
+{
+	unsigned int len = strlen(str);
+	const char window[] = "WindowPosition=(";
+	int a = 16;
+	if (strstr(str, window))
+	{
+		if (isdigit(str[a]))
+		{
+			*posotion_window_x = atoi(str + a);
+			while (isdigit(str[a]))
+			{
+				a++;
+			}
+
+			*posotion_window_y = atoi(str + a + 1);
+		}
+	}
+	return 0;
+}
+
+int button_start(char* str)
+{
+	unsigned int len = strlen(str);
+	const char button_position[] = "ButtonPosition=(";
+	const char button_color[] = "Color=";
+	const char button_hihlightColor[] = "Hihlightcolor=";
+	const char button_name[] = "Name=";
+	int d = 6;
+	int g = 0;
+	int v = 5;
+	int z = 0;
+	int e = 14;
+	int a = 16;
+	int b = 0;
+	int q = 0;
+	if (strstr(str, button_position))
+	{
+		if (isdigit(str[a]))
+		{
+			button[auvar.num_button].x = atoi(str + a);
+			while (isdigit(str[a]))
+			{
+				a++;
+			}
+			button[auvar.num_button].y = atoi(str + a + 1);
+		}
+	}
+	if (strstr(str, button_color))
+	{
+		for (int i = 0;i < 3;i++)
+		{
+			button[auvar.num_button].Color[g] = atoi(str + d);
+			d += 4;
+			g++;
+		}
+		g = 0;
+	}
+	if (strstr(str, button_name))
+	{
+		for (int i = v;i < strlen(str);i++)
+		{
+			button[auvar.num_button].Name[z] = str[i];
+			z++;
+		}
+	}
+	if (strstr(str, button_hihlightColor))
+	{
+		for (int i = 0;i < 3;i++)
+		{
+			button[auvar.num_button].HihlightColor[g] = atoi(str + e);
+			e += 4;
+			g++;
+		}
+	}
+	if (isdigit(str[0]))
+	{
+		if (auvar.k == 0)
+		{
+			button[auvar.num_button].status = atoi(str);
+			auvar.k = 1;
+		}
+		else
+		{
+			button[auvar.num_button].count_key = atoi(str);
+			auvar.k = 0;
+			auvar.num_button++;
+		}
+	}
+	return 0;
+}
+
+void processSpecialKeys(int key, int xx, int yy)
+{
+	int a=0;
+	int b=0;
+	for (int i = 0;i < auvar.num_button;i++)
+	{
+		if (button[i].status == auvar.status_botton)
+		{
+			a = button[i].count_key;
+			if (auvar.g == 0)
+			{
+				auvar.count_keys = a;
+			}
+			break;
+		}
+	}
+	for (int i = 0;i < auvar.num_button;i++)
+	{
+		if (button[i].status == auvar.status_botton)
+		{
+			b = button[i].count_key;
+		}
+	}
+	switch (key)
+	{
+	case GLUT_KEY_RIGHT:
+		if (auvar.status_botton != 1)
+		{
+			if (auvar.status_botton == 3&& auvar.count_keys !=4)
+			{
+				auvar.status_botton = 1;
+				info_game.restart = 1;
+				info_game.napravlenie = 1;
+				break;
+			}
+			//count_keys++;
+			auvar.g = 1;
+			if (auvar.count_keys > b)
+				auvar.count_keys = b;
+			status[auvar.d] = auvar.status_botton;
+			info_game.restart = 1;
+			auvar.g = 0;
+			auvar.d++;
+			auvar.status_botton = button[auvar.count_keys -1].count_key;
+			if (auvar.status_botton == 2|| auvar.count_keys == 4)
+			{
+				exit(0);
+			}
+			display();
+		}
+		if (auvar.status_botton == 1)
+		{
+			info_game.napravlenie = 1;
+			display();
+		}
+		break;
+	case GLUT_KEY_UP:
+		if (auvar.status_botton != 1)
+		{
+			auvar.count_keys--;
+			auvar.g = 1;
+			if (auvar.count_keys < a)
+				auvar.count_keys = a;
+		}
+		if (auvar.status_botton == 1)
+		{
+			info_game.napravlenie = 3;
+			display();
+		}
+		break;
+	case GLUT_KEY_DOWN:
+		if (auvar.status_botton != 1)
+		{
+			auvar.count_keys++;
+			auvar.g = 1;
+			if (auvar.count_keys > b)
+				auvar.count_keys = b;
+		}
+		if (auvar.status_botton == 1)
+		{
+			info_game.napravlenie = 4;
+			display();
+		}
+		break;
+	case GLUT_KEY_LEFT:
+		if (auvar.status_botton != 1)
+		{
+			status[auvar.d] = 0;
+			auvar.g = 0;
+			auvar.d--;
+			auvar.count_keys = auvar.back_keys;
+			auvar.status_botton = status[auvar.d];
+			display();
+		}
+		if (auvar.status_botton == 1)
+		{
+			info_game.napravlenie = 2;
+			display();
+		}
+		break;
+	}
+}
+
+
+
+void timf(int value)
+{
+	glutPostRedisplay();
+	display();
+	info_game.time1++;
+	glutTimerFunc(40, timf, 0);
+}
+
+
+
+
+
+int main(int* argc, char** argv)
+{
+	int posotion_window_x = 0;
+	int posotion_window_y = 0;
+	int status_botton = 0;
+	int count_botton = 1;
+	FILE* stream = stdin;
+	/*if (argc > 1)
+	{
+		if (fopen_s(&stream, argv[1], "r"))
+			return 1;
+	}*/
+	fopen_s(&stream, "menu.txt", "r");
+	char* str = NULL;
+	int var = 0;
+	while (!var)
+	{
+		var = readLine(&str, stream);
+		if (var == 1)
+		{
+			free(str);
+			break;
+		}
+		window_processing(str, &posotion_window_x, &posotion_window_y);
+		button_start(str);
+		free(str);
+	}
+	/*for (int i = 0; i < SIZE_OF_ARRAY;i++)
+	{
+		snake[i].ax = x - 8 * i;
+		snake[i].ay = y;
+
+	}*/
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutInitWindowSize(480, 480);
+	glutInitWindowPosition(200, 200);
+	glViewport(0, 0, 480, 480);
+	glutCreateWindow("Snake");
+	gluOrtho2D(0, 480, 0, 480);
+	glutDisplayFunc(display);
+	glutSpecialFunc(processSpecialKeys);
+	glutTimerFunc(10, timf, 0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	/*glutReshapeFunc(reshape);*/
+	glutMainLoop();
+	return 1;
+}
